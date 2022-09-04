@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
 
 	if (fp == NULL) {
 		printf("Error opening file");
+		return -1;
 	}
 
 
@@ -42,14 +43,14 @@ int main(int argc, char *argv[]) {
 	while ((c = fgetc(fp)) != EOF) {
 		if (c == '\n'){
 			if (char_in_line != 0){
-				fprintf(lfile, "%c", c);
+				fprintf(lfile, "%c", c); /* writing new line charecter in .l file*/
 				line_start_flag = 1;
 				space_flag = 0;
 				if (label_flag == 0){
 					line_counter ++;
 				}
 				printf("%d", label_flag);
-				fprintf(lfile,"%04X ", line_counter);
+				fprintf(lfile,"%04X ", line_counter); /*writing address in .l file*/
 			}
 			comment_flag = 0;
 			char_in_line = 0;
@@ -65,12 +66,12 @@ int main(int argc, char *argv[]) {
 			else if (c == ' ') {
 				if (line_start_flag || space_flag>1){}
 				else {
-					fprintf(lfile, "%c", c);
+					fprintf(lfile, "%c", c); /* writing a single space in .l file */
 					space_flag++;
 				}
 			}
 			else{
-				fprintf(lfile, "%c", c);
+				fprintf(lfile, "%c", c); /* writing charecter in .l file */
 				line_start_flag = 0;
 			}
 
