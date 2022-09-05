@@ -1,10 +1,11 @@
-0000 label:
-0000 ldc 0
-0001 ldc -5
-0002 ldc +5
-0003 loop: br loop 
-0004 br next
-0005 next:
-0005 ldc loop 
-0006 ldc var1 
-0007 var1: data 0 
+0000 00000000 label:
+0000 00000000 ldc 0
+0001 FFFFFB00 ldc -5
+0002 00000500 ldc +5
+0003 00000000 loop: br loop 
+0004 00000011 br next
+0005 00000000 next:
+0005 00000000 ldc loop 
+0006 00000000 ldc var1 
+0007 00000000 var1: data 0 
+0008 
