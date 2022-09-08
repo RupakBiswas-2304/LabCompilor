@@ -5,7 +5,8 @@ label:	; an unused label
 
 
 	ldc +5
-loop: br loop ; an infinite loop
+loop:
+ br loop ; an infinite loop
 br next	;offset should be zero
 data 5
 next:

@@ -2,10 +2,11 @@
 0000 00000000 ldc 0
 0001 FFFFFB00 ldc -5
 0002 00000500 ldc +5
-0003 00000011 loop: br loop 
-0004 00000011 br next 
+0003          loop:
+0003 00000011 br loop 
+0004 00000211 br next 
 0005 00000005 data 5
 0006          next:
-0006 00000000 ldc loop 
-0007 00000000 ldc var1 
+0006 FFFFFD00 ldc loop 
+0007 00000100 ldc var1 
 0008 00000000 var1: data 0 

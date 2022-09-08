@@ -81,6 +81,8 @@ void append_line(char *str, int counter, FILE *fp, label **head) {
     int i;
     int token_len = 0;
     int label_flag = 0;
+	label *l = malloc(sizeof(label));
+	
     UNUSED(head);
     fprintf(fp, "%04X ", counter); /*writing address in .l file*/
     strcpy(line, str);
@@ -103,7 +105,25 @@ void append_line(char *str, int counter, FILE *fp, label **head) {
                     value = atoi(strtok(NULL, " "));
                     instruction_code = value;
                     break;
-                } else if (i > 0 && i < 13) {
+                }else if (i == 1) {
+					token = strtok(NULL, " ");
+					l = search(*head, token);
+					if (l != NULL) {
+						value = l->address - counter;
+					}else {
+						value = atoi(token);
+					}
+					value *= 0x00000100;
+					instruction_code += value;
+					break;
+				}else if (i >= 5 && i <= 13 ){
+					token = strtok(NULL, " ");
+					l = search(*head, token);
+					value = l->address - counter;
+					value *= 0x00000100;
+					instruction_code += value;
+					break;
+				}else if (i > 1 && i < 5) {
                     value = atoi(strtok(NULL, " "));
                     value *= 0x00000100;
                     instruction_code += value;
@@ -225,11 +245,6 @@ int main(int argc, char *argv[]) {
     read_file(fp, lfile, extract_label, &L);
     fseek(fp, 0, SEEK_SET);
     read_file(fp, lfile, append_line, &L);
-    label *iter = L;
-    while (iter != NULL) {
-        printf("%s --> %04X\n", iter->key, iter->address);
-        iter = iter->next;
-    }
     fclose(fp);
     fclose(lfile);
     return 0;
