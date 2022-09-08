@@ -2,6 +2,8 @@
 label:	; an unused label
 	ldc 0
 	ldc -5
+
+
 	ldc +5
 loop: br loop ; an infinite loop
 br next	;offset should be zero
