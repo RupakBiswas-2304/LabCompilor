@@ -8,6 +8,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+
+typedef struct label{
+	char *key;
+	int address;
+	struct label *next;
+} label;
+
+label* search(label* L,const char* key) {
+	while (L != NULL) {
+		if (strcmp(L->key,key) == 0) {
+			return L;
+		}
+		L = L->next;
+	}
+	return NULL;
+}
+
 char *right_trim(char *str, int n)
 {
 	/* trim the right side of the string upto n characters */
@@ -27,7 +45,7 @@ void append_line(char *str, FILE *fp)
 	int value;
 	char line[100];
 	int instruction_code = 0x00000000;
-	char instructions[23][6] = {
+	char instructions[23][7] = {
 		"data",
 		"ldc","adc","adj","SET",
 		"ldl","stl","ldnl","stnl","call","brz","brlz","br",
