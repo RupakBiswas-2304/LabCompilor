@@ -5,6 +5,7 @@ label:	; an unused label
 	ldc +5
 loop: br loop ; an infinite loop
 br next	;offset should be zero
+data 5
 next:
     	ldc loop ; load code address
 	ldc var1 ; forward ref
