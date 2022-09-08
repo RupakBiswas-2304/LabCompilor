@@ -8,6 +8,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+
+typedef struct label{
+	char *key;
+	int address;
+	struct label *next;
+} label;
+
+label* search(label* L,const char* key) {
+	while (L != NULL) {
+		if (strcmp(L->key,key) == 0) {
+			return L;
+		}
+		L = L->next;
+	}
+	return NULL;
+}
+
 char *right_trim(char *str, int n)
 {
 	/* trim the right side of the string upto n characters */
@@ -28,7 +46,7 @@ void append_line(char *str, FILE *fp)
 	int value;
 	char line[100];
 	int instruction_code = 0x00000000;
-	char instructions[23][6] = {
+	char instructions[23][7] = {
 		"data",
 		"ldc","adc","adj","SET",
 		"ldl","stl","ldnl","stnl","call","brz","brlz","br",
@@ -41,36 +59,57 @@ void append_line(char *str, FILE *fp)
 		0x06,0x07,0x08,0x09,0x0b,0x0c,0x0e,0x12
 	};
 	int i;
-
+	int token_len = 0;
+	int label_flag = 0;
 	strcpy(line, str);
-	token = strtok(str, " "); /* get the first token */
-	/*if (strncmp(token,"ldc",3)==0){
-		instruction_code += 0x00000000;
-		value = atoi(strtok(NULL, " "));
-		value *= 0x00000100;
-		instruction_code += value;
-	}*/
-	for (i = 0; i < 23;i++){
-		if (strncmp(token,instructions[i],strlen(instructions[i]))==0){
-			instruction_code += instruction_opcode[i];
-			if (i>0 && i < 13){
-				value = atoi(strtok(NULL, " "));
-				value *= 0x00000100;
-				instruction_code += value;
+	token = strtok(line, " "); /* get the first token */
+	do {
+		token_len = strlen(token);
+		label_flag = 0;
+		for (i = 0;i<token_len;i++){
+			if (token[i]==':'){
+				label_flag = 1;
 			}
 		}
-	}	
+	}
+	while (label_flag && (token = strtok(NULL, " ")) != NULL);
+
+	if (token){
+		for (i = 0; i < 23;i++){
+			if (strncmp(token,instructions[i],strlen(instructions[i]))==0){
+				instruction_code += instruction_opcode[i];
+				if (i == 0){
+					value = atoi(strtok(NULL, " "));
+					instruction_code = value;
+					break;
+				}
+				else if (i>0 && i < 13){
+					value = atoi(strtok(NULL, " "));
+					value *= 0x00000100;
+					instruction_code += value;
+					break;
+				}
+			}
+		}
+		fprintf(fp, "%08X ", instruction_code);
+	}
+	else if (label_flag){
+		fprintf(fp, "         ");
+	}
 
 
-	fprintf(fp, "%08X ", instruction_code);
-	fprintf(fp, "%s", line);
+	fprintf(fp, "%s", str);
 }
+
+
+
+
 
 int main(int argc, char *argv[]) {
 	char c;
 	FILE* fp = fopen(argv[1], "r"), *lfile;
 	char* filename = argv[1];
-	int comment_flag = 0, char_in_line = 0, label_flag = 0, space_flag = 0, line_start_flag = 0;
+	int comment_flag = 0, char_in_line = 0, label_flag = 0, space_flag = 0, line_start_flag = 1;
 	char temp_line[100]= "";
 
 	/*
@@ -99,6 +138,7 @@ int main(int argc, char *argv[]) {
 	while ((c = fgetc(fp)) != EOF) {
 		if (c == '\n'){
 			if (char_in_line != 0){
+				/* printf("%s\n", temp_line); */
 				append_line(temp_line, lfile);
 				temp_line[0] = '\0';
 				fprintf(lfile, "%c", c); /* writing new line charecter in .l file*/
@@ -118,9 +158,9 @@ int main(int argc, char *argv[]) {
 		}
 		else {
 			char_in_line++;
-			if (c =='\t'){} /* ignoring tabs*/
-			else if (c == ' ') {
-				if (line_start_flag || space_flag>1){}
+			if (c =='\t'){c = ' ';} /* treating tabs as space */
+			if (c == ' ') {
+				if (line_start_flag || space_flag>1){char_in_line--;}
 				else {
 					/* fprintf(lfile, "%c", c);  writing a single space in .l file */
 					strncat(temp_line, &c, 1);
@@ -131,6 +171,7 @@ int main(int argc, char *argv[]) {
 				/* fprintf(lfile, "%c", c);  writing charecter in .l file */
 				strncat(temp_line, &c, 1);
 				line_start_flag = 0;
+				space_flag = 0;
 			}
 
 
@@ -143,7 +184,23 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
-	fprintf(lfile, "%s", temp_line);
+		if (c == EOF){
+			if (char_in_line != 0){
+				/* printf("%s\n", temp_line); */
+				append_line(temp_line, lfile);
+				temp_line[0] = '\0';
+				fprintf(lfile, "%c", c); /* writing new line charecter in .l file*/
+				line_start_flag = 1;
+				space_flag = 0;
+				if (label_flag == 0){
+					line_counter ++;
+				}
+				fprintf(lfile,"%04X ", line_counter); /*writing address in .l file*/
+			}
+			comment_flag = 0;
+			char_in_line = 0;
+		}
+	/*fprintf(lfile, "%s", temp_line);**/
 
 
 	fclose(fp);
