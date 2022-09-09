@@ -65,17 +65,56 @@ Bool has_char(char *str) {
     return false;
 }
 
-void append_line(char *str, int counter, FILE *fp, label **head) {
+Bool isvalidNumber(char *str){
+    /* check if the string is a valid number */
+    char p[100];
+    int i = 0;
+    strcpy(p, str);
+    while (p[i] != '\0') {
+        if (p[i] == '0' || p[i] == '1' || p[i] == '2' || p[i] == '3' || p[i] == '4' || p[i] == '5' || p[i] == '6' || p[i] == '7' || p[i] == '8' || p[i] == '9') {
+            i++;
+        }
+        else{
+            return false;
+        }
+    }
+    return true;
+}
+
+Bool isvalidHexnumber(char *str){
+    /* checks if the string id a valid hex number */
+    char p[100];
+    int i = 2;
+    strcpy(p, str);
+    if (p[0] == '0' && p[1] == 'x') {
+        while (p[i] != '\0') {
+            if (p[i] == '0' || p[i] == '1' || p[i] == '2' || p[i] == '3' || p[i] == '4' || p[i] == '5' || p[i] == '6' || p[i] == '7' || p[i] == '8' || p[i] == '9' || p[i] == 'a' || p[i] == 'b' || p[i] == 'c' || p[i] == 'd' || p[i] == 'e' || p[i] == 'f' || p[i] == 'A' || p[i] == 'B' || p[i] == 'C' || p[i] == 'D' || p[i] == 'E' || p[i] == 'F') {
+                i++;
+            }
+            else{
+                return false;
+            }
+        }
+        if (i<=8){
+            return true;
+        }
+        return -2;
+    }
+    return -1;
+}
+
+void append_line(char *str, int counter, FILE *fp, FILE *logfile, label **head) {
     /* write a line to the file */
     char *token;
+    int found = 0;
     int value;
     char line[100];
     int instruction_code = 0x00000000;
-    char instructions[23][7] = {"data", "ldc",    "adc",  "adj",  "SET", "ldl",
+    char instructions[21][7] = {"data", "ldc",    "adc",  "adj",  "SET", "ldl",
                                 "stl",  "ldnl",   "stnl", "call", "brz", "brlz",
                                 "br",   "add",    "sub",  "shl",  "shr", "a2sp",
                                 "sp2a", "return", "HALT"};
-    int instruction_opcode[23] = {-1,   0x00, 0x01, 0x0a, -1,   0x02, 0x03,
+    int instruction_opcode[21] = {-1,   0x00, 0x01, 0x0a, -1,   0x02, 0x03,
                                   0x04, 0x05, 0x0d, 0x0f, 0x10, 0x11, 0x06,
                                   0x07, 0x08, 0x09, 0x0b, 0x0c, 0x0e, 0x12};
     int i;
@@ -98,33 +137,58 @@ void append_line(char *str, int counter, FILE *fp, label **head) {
     } while (label_flag && (token = strtok(NULL, " ")) != NULL);
 
     if (token) {
-        for (i = 0; i < 23; i++) {
+        for (i = 0; i < 21; i++) {
             if (strncmp(token, instructions[i], strlen(instructions[i])) == 0) {
                 instruction_code += instruction_opcode[i];
+                found++;
                 if (i == 0) {
                     value = atoi(strtok(NULL, " "));
                     instruction_code = value;
                     break;
                 }else if (i == 1) {
 					token = strtok(NULL, " ");
+                    if (token == NULL){
+                        fprintf(logfile, "ERROR: Missing operand for instruction %s at address %04X\n", instructions[i], counter);
+                        break;
+                    }
 					l = search(*head, token);
 					if (l != NULL) {
 						value = l->address - counter;
 					}else {
-						value = atoi(token);
+                        if (!isvalidNumber(token) && !isvalidHexnumber(token)){
+                            fprintf(logfile, "ERROR: Invalid number %s at address %04X\n", token, counter);
+                            break;
+                        }
+                        value = strtol(token, NULL, 16);
 					}
 					value *= 0x00000100;
 					instruction_code += value;
 					break;
-				}else if (i >= 5 && i <= 13 ){
+				}else if (i >= 5 && i < 13 ){
 					token = strtok(NULL, " ");
-					l = search(*head, token);
-					value = l->address - counter;
+                    if (token == NULL){
+                        fprintf(logfile, "ERROR: Missing operand for instruction %s at address %04X\n", instructions[i], counter);
+                        break;
+                    }
+					l = search(*head, token);                
+                    if (l == NULL){
+                        if (!isvalidNumber(token) && !isvalidHexnumber(token)){
+                            fprintf(logfile, "ERROR: Invalid label or offset %s at address %04X\n", token, counter);
+                            break;
+                        }
+                        value = strtol(token, NULL, 16);
+                    }
+                    else { value = l->address - counter; }
 					value *= 0x00000100;
 					instruction_code += value;
 					break;
 				}else if (i > 1 && i < 5) {
-                    value = atoi(strtok(NULL, " "));
+                    token = strtok(NULL, " ");
+                    if (!isvalidHexnumber(token) && !isvalidNumber(token)){
+                        fprintf(logfile, "ERROR: Invalid number %s at address %04X\n", instructions[i], counter);
+                        break;
+                    }
+                    value = strtol(token, NULL, 16);
                     value *= 0x00000100;
                     instruction_code += value;
                     break;
@@ -132,6 +196,9 @@ void append_line(char *str, int counter, FILE *fp, label **head) {
             }
         }
         fprintf(fp, "%08X ", instruction_code);
+        if (!found) {
+            fprintf(logfile, "ERROR: Invalid mnemonic %s at address %04X\n", token, counter);
+        }
     } else if (label_flag) {
         fprintf(fp, "         ");
     }
@@ -139,23 +206,37 @@ void append_line(char *str, int counter, FILE *fp, label **head) {
     fprintf(fp, "%s\n", str);
 }
 
-void extract_label(char *str, int counter, FILE *fp, label **head) {
+void extract_label(char *str, int counter, FILE *fp,FILE *logfile, label **head) {
     char *token;
     char line[100];
+	label *l = malloc(sizeof(label));
     UNUSED(fp);
     strcpy(line, str);
     if (has_char(line)) {
         token = strtok(line, ":");
-        insert(token, counter, head);
+		l = search(*head, token);
+		if (l == NULL) {
+       		insert(token, counter, head);
+		}
+		else{
+			fprintf(logfile, "ERROR: Duplicate labels found for %s.\n", token);
+		}
     }
     while (has_char(line)) {
+		fprintf(logfile,"WARNING: Multiple labels found at %d.\n", counter);
         token = strtok(NULL, ":");
-        insert(token, counter, head);
+		l = search(*head, token);
+		if (l == NULL) {
+       		insert(token, counter, head);
+		}
+		else{
+			fprintf(logfile, "ERROR: Duplicate labels found for %s.\n", token);
+		}
     }
 }
 
-void read_file( FILE *fp, FILE *lfile,
-               void (*f)(char *str, int counter, FILE *fp, label **label_list),
+void read_file( FILE *fp, FILE *lfile, FILE *logfile,
+               void (*f)(char *str, int counter, FILE *fp,FILE *logfile, label **label_list),
                label **head) {
     int line_counter = 0x0000;
     int char_in_line = 0;    /* char_in_line --> helps to ignore empty lines */
@@ -170,7 +251,7 @@ void read_file( FILE *fp, FILE *lfile,
     while ((c = fgetc(fp)) != EOF) {
         if (c == '\n') {
             if (char_in_line != 0) {
-                (*f)(temp_line, line_counter, lfile, head);
+                (*f)(temp_line, line_counter, lfile, logfile,head);
                 temp_line[0] = '\0';
                 line_start_flag = 1;
                 space_flag = 0;
@@ -203,6 +284,8 @@ void read_file( FILE *fp, FILE *lfile,
             }
 
             if (c == ':') {
+                strcat(temp_line, " ");
+                space_flag++;
                 label_flag = 1;
             } else if (c != ' ' && c != '\t' && label_flag == 1) {
                 label_flag = 0;
@@ -213,7 +296,7 @@ void read_file( FILE *fp, FILE *lfile,
     if (c == EOF) {
         if (char_in_line != 0) {
             /* printf("%s\n", temp_line); */
-            (*f)(temp_line, line_counter, lfile, head);
+            (*f)(temp_line, line_counter, lfile,logfile, head);
             temp_line[0] = '\0';
             line_start_flag = 1;
             space_flag = 0;
@@ -228,24 +311,29 @@ void read_file( FILE *fp, FILE *lfile,
 }
 
 int main(int argc, char *argv[]) {
-    FILE *fp = fopen(argv[1], "r"), *lfile; /* main file pointer */
+    FILE *fp = fopen(argv[1], "r"), *lfile,*logfile; /* main file pointer */
     char *filename = argv[1];
     label *L = ((void *)0);
+	char *log_file = malloc(sizeof(char) * 100);
     if (argc < 2) {
         return 0;
     }
     filename = right_trim(filename, 3);
+	strcpy(log_file, filename);
+	strcat(log_file, "log");
     strcat(filename, "l");
     lfile = fopen(filename, "w+");
+	logfile = fopen(log_file, "w+");
 
     if (fp == NULL) {
         printf("Error opening file");
         return -1;
     }
-    read_file(fp, lfile, extract_label, &L);
+    read_file(fp, lfile, logfile, extract_label, &L);
     fseek(fp, 0, SEEK_SET);
-    read_file(fp, lfile, append_line, &L);
+    read_file(fp, lfile, logfile, append_line, &L);
     fclose(fp);
     fclose(lfile);
+	fclose(logfile);
     return 0;
 }
