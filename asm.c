@@ -103,8 +103,9 @@ Bool isvalidHexnumber(char *str){
     return -1;
 }
 
-void append_line(char *str, int counter, FILE *fp, FILE *logfile, label **head) {
-    /* write a line to the file */
+
+/* Function for appending line ( address | istruction | code ) in list file and writing to object file */
+void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, label **head) {
     char *token;
     int found = 0;
     int value;
@@ -196,6 +197,7 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, label **head) 
             }
         }
         fprintf(fp, "%08X ", instruction_code);
+        fwrite(&instruction_code, sizeof(int), 1, ofile);
         if (!found) {
             fprintf(logfile, "ERROR: Invalid mnemonic %s at address %04X\n", token, counter);
         }
@@ -206,11 +208,12 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, label **head) 
     fprintf(fp, "%s\n", str);
 }
 
-void extract_label(char *str, int counter, FILE *fp,FILE *logfile, label **head) {
+void extract_label(char *str, int counter, FILE *fp,FILE *logfile,FILE *ofile, label **head) {
     char *token;
     char line[100];
 	label *l = malloc(sizeof(label));
     UNUSED(fp);
+    UNUSED(ofile);
     strcpy(line, str);
     if (has_char(line)) {
         token = strtok(line, ":");
@@ -235,8 +238,8 @@ void extract_label(char *str, int counter, FILE *fp,FILE *logfile, label **head)
     }
 }
 
-void read_file( FILE *fp, FILE *lfile, FILE *logfile,
-               void (*f)(char *str, int counter, FILE *fp,FILE *logfile, label **label_list),
+void read_file( FILE *fp, FILE *lfile, FILE *logfile, FILE *ofile,
+               void (*f)(char *str, int counter, FILE *fp,FILE *logfile,FILE *ofile, label **label_list),
                label **head) {
     int line_counter = 0x0000;
     int char_in_line = 0;    /* char_in_line --> helps to ignore empty lines */
@@ -251,7 +254,7 @@ void read_file( FILE *fp, FILE *lfile, FILE *logfile,
     while ((c = fgetc(fp)) != EOF) {
         if (c == '\n') {
             if (char_in_line != 0) {
-                (*f)(temp_line, line_counter, lfile, logfile,head);
+                (*f)(temp_line, line_counter, lfile, logfile,ofile,head);
                 temp_line[0] = '\0';
                 line_start_flag = 1;
                 space_flag = 0;
@@ -296,7 +299,7 @@ void read_file( FILE *fp, FILE *lfile, FILE *logfile,
     if (c == EOF) {
         if (char_in_line != 0) {
             /* printf("%s\n", temp_line); */
-            (*f)(temp_line, line_counter, lfile,logfile, head);
+            (*f)(temp_line, line_counter, lfile,logfile,ofile, head);
             temp_line[0] = '\0';
             line_start_flag = 1;
             space_flag = 0;
@@ -311,29 +314,34 @@ void read_file( FILE *fp, FILE *lfile, FILE *logfile,
 }
 
 int main(int argc, char *argv[]) {
-    FILE *fp = fopen(argv[1], "r"), *lfile,*logfile; /* main file pointer */
+    FILE *fp = fopen(argv[1], "r"), *lfile,*logfile,*ofile; /* main file pointer */
     char *filename = argv[1];
     label *L = ((void *)0);
 	char *log_file = malloc(sizeof(char) * 100);
+    char *out_file = malloc(sizeof(char) * 100);
     if (argc < 2) {
         return 0;
     }
     filename = right_trim(filename, 3);
 	strcpy(log_file, filename);
+    strcpy(out_file, filename);
 	strcat(log_file, "log");
     strcat(filename, "l");
+    strcat(out_file, "o");
     lfile = fopen(filename, "w+");
 	logfile = fopen(log_file, "w+");
+    ofile = fopen(out_file, "wb");
 
     if (fp == NULL) {
         printf("Error opening file");
         return -1;
     }
-    read_file(fp, lfile, logfile, extract_label, &L);
+    read_file(fp, lfile, logfile,ofile, extract_label, &L);
     fseek(fp, 0, SEEK_SET);
-    read_file(fp, lfile, logfile, append_line, &L);
+    read_file(fp, lfile, logfile,ofile, append_line, &L);
     fclose(fp);
     fclose(lfile);
 	fclose(logfile);
+    fclose(ofile);
     return 0;
 }
