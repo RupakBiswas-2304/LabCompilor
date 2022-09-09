@@ -71,7 +71,7 @@ Bool isvalidNumber(char *str){
     int i = 0;
     strcpy(p, str);
     while (p[i] != '\0') {
-        if (p[i] == '0' || p[i] == '1' || p[i] == '2' || p[i] == '3' || p[i] == '4' || p[i] == '5' || p[i] == '6' || p[i] == '7' || p[i] == '8' || p[i] == '9') {
+        if (p[i] == '0'|| p[i]== '-' || p[i] == '1' || p[i] == '2' || p[i] == '3' || p[i] == '4' || p[i] == '5' || p[i] == '6' || p[i] == '7' || p[i] == '8' || p[i] == '9') {
             i++;
         }
         else{
@@ -98,9 +98,9 @@ Bool isvalidHexnumber(char *str){
         if (i<=8){
             return true;
         }
-        return -2;
+        return false;
     }
-    return -1;
+    return false;
 }
 
 
@@ -219,6 +219,9 @@ void extract_label(char *str, int counter, FILE *fp,FILE *logfile,FILE *ofile, l
         token = strtok(line, ":");
 		l = search(*head, token);
 		if (l == NULL) {
+            if (token[0] >= '0' && token[0] <= '9') {
+                fprintf(logfile, "ERROR: Invalid label %s at address %04X\n", token, counter);
+            }
        		insert(token, counter, head);
 		}
 		else{
@@ -230,6 +233,9 @@ void extract_label(char *str, int counter, FILE *fp,FILE *logfile,FILE *ofile, l
         token = strtok(NULL, ":");
 		l = search(*head, token);
 		if (l == NULL) {
+            if (token[0] >= '0' && token[0] <= '9') {
+                fprintf(logfile, "ERROR: Invalid label %s at address %04X\n", token, counter);
+            }
        		insert(token, counter, head);
 		}
 		else{

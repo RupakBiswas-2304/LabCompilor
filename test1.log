@@ -1,0 +1,8 @@
+ERROR: Duplicate labels found for label.
+ERROR: Invalid label 0def at address 0005
+ERROR: Invalid label or offset nonesuch at address 0000
+ERROR: Invalid number 08ge at address 0001
+ERROR: Missing operand for instruction ldc at address 0002
+ERROR: Invalid number 5, at address 0004
+ERROR: Invalid mnemonic fibble at address 0005
+ERROR: Invalid mnemonic 0def at address 0006
