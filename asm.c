@@ -154,7 +154,7 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
                     }
 					l = search(*head, token);
 					if (l != NULL) {
-						value = l->address - counter;
+						value = l->address;
 					}else {
                         if (!isvalidNumber(token) && !isvalidHexnumber(token)){
                             fprintf(logfile, "ERROR: Invalid number %s at address %04X\n", token, counter);
@@ -179,7 +179,7 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
                         }
                         value = strtol(token, NULL, 16);
                     }
-                    else { value = l->address - counter; }
+                    else { value = l->address - counter - 1; }
 					value *= 0x00000100;
 					instruction_code += value;
 					break;
