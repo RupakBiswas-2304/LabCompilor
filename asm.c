@@ -1,8 +1,13 @@
-/*
-|--------------------------------------|
-|                                      |
-|--------------------------------------|
-*/
+/*****************************************************************************
+TITLE: Claims																																
+AUTHOR:  Rupak Biswas
+ROLL NO: 2001CS57
+EMAIL ID: rupak_2001cs57@iitp.ac.in
+Declaration of Authorship
+This txt file, claims.txt, is part of the assignment of CS322 at the 
+department of Computer Science and Engg, IIT Patna . 
+*****************************************************************************/
+
 
 #include <stdio.h>
 #include <stdlib.h>
