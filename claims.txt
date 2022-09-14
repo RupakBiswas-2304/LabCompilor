@@ -36,14 +36,13 @@ Program format and structure:
 		* assembles test programs.
 	  * can implements and demonstrates the instruction SET.
 
-2. The emulator ( if you are submitting) :
+2. The emulator  :
 
 		* with three data structures to store respectively memory, mnemonic table with expected operands
 		  and a linked list structure word.
     * loads object file, 
     * by giving the instructions like "-befor/-after" , the program can produce memory dump before/after execution.
     * by giving the instruction like "-trace", the program prints the result of program executed.
-    * detects errant programs.
 
 
 =============================
@@ -53,7 +52,8 @@ Testing:
 1. The assembler:
 
 I have tested  X/ five examples shown as bellow. The errors only occurred in the file test2.asm and 
-the program immediately stopped on the second pass. 
+the program was able to detect the error and print the error message. Log file generated correctly but the errors are not 
+enough to stop the program, it creates the object file asuming simple case senario.  
 
 The others were tested without any errors detected and produced three output files, listing file, 
 error log file and machine readable object file, for each example. 
@@ -78,15 +78,15 @@ b. test2.log (without error messages shown as below but also in log file)
 c. test2.o
 
 error messages:
-ERROR: A duplicate label was found on line 4
-ERROR: There is a non-numerical value on line 6
-ERROR: A numerical value was expected on line 7
-ERROR: A numerical value was not expected on line 8
-ERROR: Only one numerical value was expected on line 9
-ERROR: A bogus label name was found on line 10
-ERROR: An unknown mnemonic was found on line 11
-ERROR: An unknown mnemonic was found on line 12
-ERROR: A non existant label was found on line 5
+ERROR: Duplicate labels found for label.
+ERROR: Invalid label 0def at address 0005
+ERROR: Invalid label or offset nonesuch at address 0000
+ERROR: Invalid number 08ge at address 0001
+ERROR: Missing operand for instruction ldc at address 0002
+ERROR: Invalid number 5, at address 0004
+ERROR: Invalid mnemonic fibble at address 0005
+ERROR: Invalid mnemonic 0def at address 0006
+
 
 3)
 #Input:asm test3.asm

@@ -172,6 +172,7 @@ void SET(int value) { MEMORY[PC] = value; }
 
 int main(int argc, char *argv[]) {
     FILE *fp = fopen(argv[1], "rb");
+    bool persistant = false;
     int file_size_in_bytes;
     int opcode, operand;
     int delay = 0;
@@ -189,20 +190,29 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[2], "-t") == 0) {
             trace = true;
         }
-    }
-    if (argv[3]) {
-        if (strcmp(argv[3], "-d") == 0) {
-            if (!argv[4]) {
-                printf("USAGE: %s <file> [-t] [-d [sec]]\n", argv[0]);
-                printf(" -t: trace execution\n");
-                printf(" -d [sec]: delay execution\n");
-                return 0;
+        if (argv[3]) {
+            if (strcmp(argv[3], "-d") == 0) {
+                if (!argv[4]) {
+                    printf("USAGE: %s <file> [-t] [-d [sec]]\n", argv[0]);
+                    printf(" -t: trace execution\n");
+                    printf(" -d [sec]: delay execution\n");
+                    return 0;
+                }
+                delay = atoi(argv[4]);
+                #ifdef _WIN32
+                delay = delay*1000;
+                #endif
+                if (argv[5]){
+                    if (strcmp(argv[5], "-p") == 0) {
+                        persistant = true;
+                    }
+                }
             }
-            delay = atoi(argv[4]);
-            #ifdef _WIN32
-            delay = delay*1000;
-            #endif
+            else if (strcmp(argv[3], "-p") == 0) {
+                persistant = true;
+            }
         }
+        
     }
 
     fseek(fp, 0, SEEK_END);
@@ -219,7 +229,7 @@ int main(int argc, char *argv[]) {
         (*f[opcode])(operand);
         if (trace) {
             sleep(delay);
-            system(CLEAR);
+            if( !persistant) system(CLEAR);
             print_register();
         }
     }

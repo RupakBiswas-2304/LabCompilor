@@ -18,6 +18,8 @@ department of Computer Science and Engg, IIT Patna .
 #define true 1
 #define false 0
 #define UNUSED(x) (void)(x)
+#define and &&
+#define or ||
 
 typedef struct label {
     char *key;
@@ -108,6 +110,20 @@ Bool isvalidHexnumber(char *str){
     return false;
 }
 
+Bool containsSET(char *str){
+    /* checks if the string contains SET */
+    char p[100];
+    int i = 0;
+    strcpy(p, str);
+    while (p[i] != '\0') {
+        if (p[i] == 'S' && p[i+1] == 'E' && p[i+2] == 'T') {
+            return true;
+        }
+        i++;
+    }
+    return false;
+}
+
 
 /* Function for appending line ( address | istruction | code ) in list file and writing to object file */
 void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, label **head) {
@@ -151,7 +167,7 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
                     value = atoi(strtok(NULL, " "));
                     instruction_code = value;
                     break;
-                }else if (i == 1) {
+                }else if (i == 1 || i == 2) {
 					token = strtok(NULL, " ");
                     if (token == NULL){
                         fprintf(logfile, "ERROR: Missing operand for instruction %s at address %04X\n", instructions[i], counter);
@@ -170,7 +186,9 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
 					value *= 0x00000100;
 					instruction_code += value;
 					break;
-				}else if (i >= 5 && i < 13 ){
+				}else if (i == 4){
+                    break;
+                }else if (i >= 5 && i < 13 ){
 					token = strtok(NULL, " ");
                     if (token == NULL){
                         fprintf(logfile, "ERROR: Missing operand for instruction %s at address %04X\n", instructions[i], counter);
@@ -188,21 +206,32 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
 					value *= 0x00000100;
 					instruction_code += value;
 					break;
-				}else if (i > 1 && i < 5) {
+				}else if (i > 1 && i < 4) {
                     token = strtok(NULL, " ");
-                    if (!isvalidHexnumber(token) && !isvalidNumber(token)){
+					l = search(*head, token);                
+                    if (!isvalidHexnumber(token) && !isvalidNumber(token) && l == NULL){
                         fprintf(logfile, "ERROR: Invalid number %s at address %04X\n", instructions[i], counter);
                         break;
                     }
-                    value = strtol(token, NULL, 16);
-                    value *= 0x00000100;
-                    instruction_code += value;
+
+                    if ( l != NULL) {
+                        value = l->address;
+                    }else {
+                        value = strtol(token, NULL, 16);
+                        value *= 0x00000100;
+                        instruction_code += value;
+                    }
                     break;
                 }
             }
         }
-        fprintf(fp, "%08X ", instruction_code);
-        fwrite(&instruction_code, sizeof(int), 1, ofile);
+        if (i == 4){
+            fprintf(fp, "         ");
+        }
+        else{
+            fprintf(fp, "%08X ", instruction_code);
+            fwrite(&instruction_code, sizeof(int), 1, ofile);
+        }
         if (!found) {
             fprintf(logfile, "ERROR: Invalid mnemonic %s at address %04X\n", token, counter);
         }
@@ -214,12 +243,15 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
 }
 
 void extract_label(char *str, int counter, FILE *fp,FILE *logfile,FILE *ofile, label **head) {
-    char *token;
-    char line[100];
+    char *token,*token2;
+    char line[100], line2[100];
+    int address;
 	label *l = malloc(sizeof(label));
     UNUSED(fp);
     UNUSED(ofile);
     strcpy(line, str);
+    strcpy(line2, str);
+    printf("%s\n", line);
     if (has_char(line)) {
         token = strtok(line, ":");
 		l = search(*head, token);
@@ -233,19 +265,14 @@ void extract_label(char *str, int counter, FILE *fp,FILE *logfile,FILE *ofile, l
 			fprintf(logfile, "ERROR: Duplicate labels found for %s.\n", token);
 		}
     }
-    while (has_char(line)) {
-		fprintf(logfile,"WARNING: Multiple labels found at %d.\n", counter);
-        token = strtok(NULL, ":");
-		l = search(*head, token);
-		if (l == NULL) {
-            if (token[0] >= '0' && token[0] <= '9') {
-                fprintf(logfile, "ERROR: Invalid label %s at address %04X\n", token, counter);
-            }
-       		insert(token, counter, head);
-		}
-		else{
-			fprintf(logfile, "ERROR: Duplicate labels found for %s.\n", token);
-		}
+    if (containsSET(line2)){
+        token2 = strtok(NULL, "SET ");
+        if (token2){
+            address = strtol(token2, NULL, 0);
+            printf("%s -> %x\n", token2, address);
+            l = search(*head, token);
+            l->address = address;
+        }
     }
 }
 
@@ -266,10 +293,11 @@ void read_file( FILE *fp, FILE *lfile, FILE *logfile, FILE *ofile,
         if (c == '\n') {
             if (char_in_line != 0) {
                 (*f)(temp_line, line_counter, lfile, logfile,ofile,head);
+                if (containsSET(temp_line)) {label_flag++;}
                 temp_line[0] = '\0';
                 line_start_flag = 1;
                 space_flag = 0;
-                if (label_flag == 0) {
+                if (label_flag == 0  ) {
                     line_counter++;
                 }
             }

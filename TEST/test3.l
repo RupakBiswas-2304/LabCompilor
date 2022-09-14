@@ -1,4 +1,4 @@
-0000 000074FF val:  SET 75
-0001 00000000 ldc  val
-0002 00000001 adc  val2
-0003 000065FF val2:  SET 66
+0000          val:  SET 75
+0000 00004B00 ldc  val
+0001 00004201 adc  val2
+0002          val2:  SET 66
