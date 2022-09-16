@@ -1,6 +1,6 @@
 0000 00010000 ldc 0x100  
 0001 0000000B a2sp  
-0002 00000300 ldc times  
+0002 00006400 ldc times  
 0003 FFFFFF0A adj -1
 0004 00000003 stl 0
 0005          LOOP:  
@@ -18,6 +18,6 @@
 0010 00000003 stl 0  
 0011 FFFFF311 br LOOP
 0012          LOOP_OUT: 
-0012          times:  SET 3  
+0012          times:  SET 100  
 0012 00000012 HALT
 0013 00000000 result:  data 0  

@@ -191,24 +191,27 @@ void print_manual() {
     printf(" -membefore [start] [end]: print memory before execution\n");
     printf(" -memafter [start] [end]: print memory after execution\n");
     printf(" -memtrace [start] [end]: print memory after each instruction\n");
+    printf(" -instructions : Prints the instruction Set");
 }
 
 int main(int argc, char *argv[]) {
     FILE *fp = fopen(argv[1], "rb");
+    FILE *isetfp;
     bool persistant = false;
     int file_size_in_bytes;
     int opcode, operand;
-    int delay = 0;
+    double delay = 0;
     void (*f[19])(int value) = {ldc, adc, ldl,  stl, ldnl, stnl, add,
                                 sub, shl, shr,  adj, a2sp, sp2a, call,
                                 ret, brz, brlz, br,  HALT};
     bool trace = false;
-    bool memb = false, memt = false;
+    bool memb = false, memt = false, step = false;
     int startb = 0, endb = 100;
     bool mema = false;
     int starta = 0, enda = 100;
     int startt = 0, endt = 100;
     int inputs = 0;
+    char x;
 
     if (fp == NULL){
         print_manual();
@@ -223,7 +226,7 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[inputs +1], "-t") == 0) trace = true;
         else if (strcmp(argv[inputs +1], "-d") == 0) {
             if (!argv[inputs+2]) { print_manual(); return 0; }
-            delay = atoi(argv[inputs +2]);
+            delay = atof(argv[inputs +2]);
         }
         else if (strcmp(argv[inputs +1], "-p") == 0) persistant = true;
         else if (strcmp(argv[inputs +1], "-membefore") == 0) {
@@ -240,6 +243,17 @@ int main(int argc, char *argv[]) {
             memt = true;
             startt = atoi(argv[inputs +2]);
             endt = atoi(argv[inputs +3]);
+        }
+        else if (strcmp(argv[inputs +1], "-step") == 0) {
+            step = true;
+        }
+        else if (strcmp(argv[inputs +1],"-instructions")==0){
+            isetfp = fopen("instructionset.txt", "r");
+            while((x=fgetc(isetfp))!=EOF) {
+                printf("%c",x);
+            }
+            printf("\n");
+            fclose(isetfp);
         }
         inputs--;
     }
@@ -269,6 +283,10 @@ int main(int argc, char *argv[]) {
             if( !persistant) system(CLEAR);
             print_register();
             if (memt) print_memory(startt, endt);
+        }
+        if (step){
+            printf("Press enter to continue...");
+            getchar();
         }
     }
     print_register();

@@ -1,0 +1,26 @@
+**      INSTRUCTION SET    **
++----------------+-----------+--------------+--------------------------------+
+|    Mnemonic    |   OPcode  |   Oparand    |      Formal Specification      |
++----------------+-----------+--------------+--------------------------------+
+|    data        |           |    value     |                                |
+|    ldc         |   0       |    value     |  B := A, A := value            |
+|    adc         |   1       |    value     |  A := A + value                |
+|    ldl         |   2       |   offset     |  B:=A,A:= memory[SP+offset]    |
+|    stl         |   3       |   offset     | memory[SP+offset] := A; A:=B   |
+|    ldnl        |   4       |   offset     | A:= memory[A+offset]           |
+|    stnl        |   5       |   offset     | memory[A+offset] := B;         |
+|    add         |   6       |              |   A := B + A;                  |
+|    sub         |   7       |              |   A := B - A;                  |
+|    shl         |   8       |              |   A := B << A;                 |
+|    shr         |   9       |              |   A := B >> A;                 |
+|    adj         |   10      |    value     |   SP := SP + value             |
+|    a2sp        |   11      |              |   sp:= A; A := B               |
+|    sp2a        |   12      |              |   B:= A ; A := sp              |
+|   call         |   13      |   offset     |  B:= A; A:= PC; PC:= PC+offset |
+|   return       |   14      |              |  PC:= A ; A:= B;               |
+|   brz          |   15      |   offset     | if A==0 > PC := PC + offset    |
+|   brlz         |   16      |   offset     | if A < 0 , PC := PC + offset   |
+|   br           |   17      |   offset     | PC:= PC + offset               |
+|   HALT         |           |              |                                |
+|   SET          |           |   offset     |                                |
++----------------+-----------+--------------+--------------------------------+
