@@ -16,7 +16,7 @@ bubbleSort:
     LOOP:
         ldc total   ; A = &total
         ldnl 0      ; A = total
-        ldc i       ; A = &j ,B = total
+        ldc i       ; A = &i ,B = total
         ldnl 0
         sub         ; A = total - i
         ;ldc 1       ; A = 1 ,B = total - i
@@ -40,26 +40,39 @@ bubbleSort:
             ;-------------------------
             ;------------------------- if (array[j+1] -array[j] < 0)
             ldc array                   ; A = &array
-            ldnl j                      ; A = array[j]
-            ldc 0                       ; A = 0, B = array[j]
-            ldc array                   ; A = array, B = array[i]
-            ldnl j2                     ; A = array[j+1], B = array[i]
+            ldc j                      ; A = &j, B = &array
+            ldnl 0                      ; A = j, B = &array
+            add                         ; A = &array[j]
+            ldnl 0                      ; A = array[j] 
+            ldc j2                      ; A = &j2, B = array[j]
+            ldnl 0                      ; A = j2, B = array[j]
+            adc array                   ; A = array +j2 , B = array[j]
+            ldnl 0                     ; A = array[j2], B = array[j]
             sub                         ; A = array[j] - array[j+1]
             brlz PASS                   ; if A < 0, PASS else swap
             ;-------------------------- swap
-            ldc array                   ; A = array
-            ldnl j                      ; A = array[j]
+            ldc j 
+            ldnl 0
+            adc array
+            ldnl 0
             ldc temp                    ; A = temp, B = array[j]
             stnl 0                      ; temp = array[j]
 
-            ldc array                   ;A = array
-            ldnl j2                     ; A = array[j+1], B = array[j]
-            ldc temp                   ; A = &temp, B = array[j+1]
-            stnl j                      ; array[j] = array[j+1]
+            ldc j2                   ;A = array
+            ldnl 0
+            adc array
+            ldnl 0                     ; A = array[j+1], B = array[j]
+            ldc j
+            ldnl 0
+            adc array                   ; A = array + j & B = array[j + 1]
+            stnl 0
 
-            ldnl 0                      ; A = temp, B = array[j+1]
-            ldc array                   ; A = array, B = temp
-            stnl j2                     ; array[j+1] = temp
+            ldc temp                      ; A = temp, B = array[j+1]
+            ldnl 0
+            ldc j2
+            ldnl 0
+            adc array                   ; A = array, B = temp
+            stnl 0                     ; array[j+1] = temp
             ;------------ (j++)
             PASS:
                 ldc 1                   ; A = 1
@@ -67,15 +80,14 @@ bubbleSort:
                 ldnl 0
                 add                     ; A = j + 1
                 ldc j                   ; B = j + 1 , A = &j
-                ldnl 0
                 stnl 0                  ; j = j + 1
                 br LOOP2
 
 ResetJ:                     ; reset j to 0
     ldc 0                   ; A = 0
     ldc j                   ; A = j, B = 0
-    ldnl 0
     stnl 0                  ; j = 0
+    
     ldc 1                   ; A = 1
     ldc i                   ; A = i, B = 1
     ldnl 0
