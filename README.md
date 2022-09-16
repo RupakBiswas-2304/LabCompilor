@@ -1,10 +1,7 @@
 # TITLE: 4 Register Assembler and Emulator
-[]: # Author: [RUPAK BISWAS]( https://github.com/RupakBiswas-2304 )
-[]: # Date: 2021-09-16
+### Author: [RUPAK BISWAS]( https://github.com/RupakBiswas-2304 )
+### Date: 2021-09-16
 
-Declaration of Authorship
-This txt file, claims.txt, is part of the assignment of CS322 at the 
-department of Computer Science and Engg, IIT Patna . 
 
 Files:
 ==========
