@@ -32,7 +32,7 @@ Program format and structure:
 		* assembles test programs.
 	  * can implements and demonstrates the instruction SET.
 
-2. The emulator ( if you are submitting) :
+2. The emulator :
 
 		* with three data structures to store respectively memory, mnemonic table with expected operands
 		  and a linked list structure word.
@@ -48,7 +48,7 @@ Testing:
 
 1. The assembler:
 
-I have tested  X/ five examples shown as bellow. The errors only occurred in the file test2.asm and 
+I have tested  5/ five examples shown as bellow. The errors only occurred in the file test2.asm and 
 the program immediately stopped on the second pass. 
 
 The others were tested without any errors detected and produced three output files, listing file, 

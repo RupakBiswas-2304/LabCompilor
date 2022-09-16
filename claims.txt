@@ -51,7 +51,7 @@ Testing:
 
 1. The assembler:
 
-I have tested  X/ five examples shown as bellow. The errors only occurred in the file test2.asm and 
+I have tested  5/ five examples shown as bellow. The errors only occurred in the file test2.asm and 
 the program was able to detect the error and print the error message. Log file generated correctly but the errors are not 
 enough to stop the program, it creates the object file asuming simple case senario.  
 
@@ -64,14 +64,14 @@ from those provided( if there is different  that is fine too)
  
 
 1)
-#Input: asm test1.asm
+#Input: ./asm test1.asm
 #Output: 
 a. test1.l 
 b. test1.log (without any error messages)
 c. test1.o
 
 2)
-#Input:asm test2.asm
+#Input: ./asm test2.asm
 #Output: 
 a. test2.l 
 b. test2.log (without error messages shown as below but also in log file)
@@ -89,7 +89,7 @@ ERROR: Invalid mnemonic 0def at address 0006
 
 
 3)
-#Input:asm test3.asm
+#Input: ./asm TEST/test3.asm (memcopy.asm)
 #Output: 
 a. test3.l 
 b. test3.log (without any error messages)
@@ -97,14 +97,14 @@ c. test3.o
 
 
 4)
-#Input:asm memcpy.asm
+#Input: ./asm test4.asm (triangle.asm)
 #Output: 
 a. memcpy.l 
 b. memcpy.log (without any error messages)
 c. memcpy.o
 
 5)
-#Input:asm triangle.asm
+#Input: ./asm sums.asm 
 #Output: 
 a. triangle.l 
 b. triangle.log (without any error messages)
@@ -114,8 +114,7 @@ c. triangle.o
 
 2. The emulator:
 
-I have tested three examples shown as bellow. The errors only occurred in the file test3.o and 
-the program immediately stopped with an error message on the screen. 
+I have tested three examples shown as bellow. 
 
 The others were tested without any errors detected and produced excution data both on the screen and 
 output text file for each example according to the usage instruction. 
@@ -123,19 +122,50 @@ output text file for each example according to the usage instruction.
 After running the bin file given, the trace data are the same as 
 the implemented result from my own program.
 
+Flags : 
+input :  ./emu help
+USAGE: <file> [-t] [-d [sec]] [-p] ...
+ -t: trace execution
+ -d [sec]: delay execution
+ -p: persistant trace output
+ -membefore [start] [end]: print memory before execution
+ -memafter [start] [end]: print memory after execution
+ -memtrace [start] [end]: print memory after each instruction
+
 1)
-#Input:emu -trace memcpy.asm
-#Output: memcpy.txt
+Input :  ./emu TEST/test3.o -t -p -memafter 0 20
+Output :
++------------+------------+------------+------------+
+|    Reg A   |    Reg B   |     PC     |     SP     |
++------------+------------+------------+------------+
+|     75     |      0     |      1     |      0     |
++------------+------------+------------+------------+
++------------+------------+------------+------------+
+|    Reg A   |    Reg B   |     PC     |     SP     |
++------------+------------+------------+------------+
+|     141    |      0     |      2     |      0     |
++------------+------------+------------+------------+
++------------+------------+------------+------------+
+|    Reg A   |    Reg B   |     PC     |     SP     |
++------------+------------+------------+------------+
+|     141    |      0     |      2     |      0     |
++------------+------------+------------+------------+
++----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+
+|  MEMORY  |     0    |     1    |     2    |     3    |     4    |     5    |     6    |     7    |     8    |     9    |
++----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+
+| 00000000 | 00004B00 | 00004201 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 |
++----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+
+| 0000000A | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 |
++----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+
+| 00000014 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 | 00000000 |
++----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+
 
 
 2)
-#Input: emu -trace triangle.asm
+#Input: ./emu TEST/test4.o -t -p -memafter 0 100 > TEST/triangle.txt
 #Output: triangle.txt
 
 
 3)
-#Input: emu -trace test3.asm
-#Output: Fail to complete. 
-with error messages shown on the screen
-
-PC=00000000, SP=08049596, A=008172D0, B=0804958C Fatal error occurred! No instruction can be found!
+#Input: ./emu TEST/test1.o -t 
+#Output: Gone in infinite loop ( no error or warning message)

@@ -42,6 +42,7 @@ department of Computer Science and Engg, IIT Patna .
 unsigned int MEMORY[SPACE];
 int A, B, SP = 0, PC = 0;
 const int SEG_LEN = 12;
+int not_halted = 1;
 void fprint(int value) {
     int length = log10(value == 0 ? 1 : value) + 1;
     int right_space = 0;
@@ -55,7 +56,7 @@ void fprint(int value) {
     for (i = 0; i < left_space; i++) {
         printf(" ");
     }
-    printf(GREEN "%d" NORMAL, value);
+    printf("%d", value);
     for (i = 0; i < right_space; i++) {
         printf(" ");
     }
@@ -162,13 +163,35 @@ void br(int offset) { PC += offset; }
 
 void HALT(int value) {
     UNUSED(value);
-    print_register();
-    exit(0);
+    not_halted = 0;
 }
-
 void SET(int value) { MEMORY[PC] = value; }
 
+void print_memory(int start, int end){
+    int i, j;
+    printf("+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+\n");
+    printf("|  MEMORY  |     0    |     1    |     2    |     3    |     4    |     5    |     6    |     7    |     8    |     9    |\n");
+    printf("+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+\n");
+    for(i = start; i <= end;){
+        printf("| %.8X |", i);
+        for (j = 0; j < 10; j++){
+            printf(" %.8X |", MEMORY[i]);
+            i++;
+        }
+        printf("\n");
+        printf("+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+----------+\n");
+    }
+}
 
+void print_manual() {
+    printf("USAGE: <file> [-t] [-d [sec]] [-p] ... \n");
+    printf(" -t: trace execution\n");
+    printf(" -d [sec]: delay execution\n");
+    printf(" -p: persistant cli output\n");
+    printf(" -membefore [start] [end]: print memory before execution\n");
+    printf(" -memafter [start] [end]: print memory after execution\n");
+    printf(" -memtrace [start] [end]: print memory after each instruction\n");
+}
 
 int main(int argc, char *argv[]) {
     FILE *fp = fopen(argv[1], "rb");
@@ -180,39 +203,45 @@ int main(int argc, char *argv[]) {
                                 sub, shl, shr,  adj, a2sp, sp2a, call,
                                 ret, brz, brlz, br,  HALT};
     bool trace = false;
-    if (argc < 2) {
-        printf("USAGE: %s <file> [-t]\n", argv[0]);
-        printf(" -t: trace execution\n");
-        printf(" -d [sec]: delay execution\n");
+    bool memb = false, memt = false;
+    int startb = 0, endb = 100;
+    bool mema = false;
+    int starta = 0, enda = 100;
+    int startt = 0, endt = 100;
+    int inputs = 0;
+
+    if (fp == NULL){
+        print_manual();
         return 0;
     }
-    if (argv[2]) {
-        if (strcmp(argv[2], "-t") == 0) {
-            trace = true;
+    if (argc < 2) {
+        print_manual();
+        return 0;
+    }
+    inputs = argc - 2;
+    while (inputs){
+        if (strcmp(argv[inputs +1], "-t") == 0) trace = true;
+        else if (strcmp(argv[inputs +1], "-d") == 0) {
+            if (!argv[inputs+2]) { print_manual(); return 0; }
+            delay = atoi(argv[inputs +2]);
         }
-        if (argv[3]) {
-            if (strcmp(argv[3], "-d") == 0) {
-                if (!argv[4]) {
-                    printf("USAGE: %s <file> [-t] [-d [sec]]\n", argv[0]);
-                    printf(" -t: trace execution\n");
-                    printf(" -d [sec]: delay execution\n");
-                    return 0;
-                }
-                delay = atoi(argv[4]);
-                #ifdef _WIN32
-                delay = delay*1000;
-                #endif
-                if (argv[5]){
-                    if (strcmp(argv[5], "-p") == 0) {
-                        persistant = true;
-                    }
-                }
-            }
-            else if (strcmp(argv[3], "-p") == 0) {
-                persistant = true;
-            }
+        else if (strcmp(argv[inputs +1], "-p") == 0) persistant = true;
+        else if (strcmp(argv[inputs +1], "-membefore") == 0) {
+            memb = true;
+            startb = atoi(argv[inputs +2]);
+            endb = atoi(argv[inputs +3]);
         }
-        
+        else if (strcmp(argv[inputs +1], "-memafter") == 0) {
+            mema = true;
+            starta = atoi(argv[inputs +2]);
+            enda = atoi(argv[inputs +3]);
+        }
+        else if (strcmp(argv[inputs +1], "-memtrace") == 0) {
+            memt = true;
+            startt = atoi(argv[inputs +2]);
+            endt = atoi(argv[inputs +3]);
+        }
+        inputs--;
     }
 
     fseek(fp, 0, SEEK_END);
@@ -222,18 +251,28 @@ int main(int argc, char *argv[]) {
     if (file_size_in_bytes % 4 != 0) exit(-1);
 
     fread(MEMORY, 4, file_size_in_bytes / 4, fp);
-    while (PC < file_size_in_bytes / 4) {
+
+    if (memb) print_memory(startb, endb);
+    while (PC < file_size_in_bytes / 4 && not_halted) {
         opcode = MEMORY[PC] % (1 << 8);
-        operand = ((int)MEMORY[PC] >> 8);
-        PC++;
-        (*f[opcode])(operand);
+        if (0 <= opcode && opcode < 19){
+            operand = ((int)MEMORY[PC] >> 8);
+            PC++;
+            (*f[opcode])(operand);
+        }
+        else{
+            operand = MEMORY[PC];
+            PC++;
+        } 
         if (trace) {
-            sleep(delay);
+            if (delay) sleep(delay);
             if( !persistant) system(CLEAR);
             print_register();
+            if (memt) print_memory(startt, endt);
         }
     }
     print_register();
+    if (mema) print_memory(starta, enda);
     fclose(fp);
     return 0;
 }

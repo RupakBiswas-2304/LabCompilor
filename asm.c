@@ -171,6 +171,7 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
 					token = strtok(NULL, " ");
                     if (token == NULL){
                         fprintf(logfile, "ERROR: Missing operand for instruction %s at address %04X\n", instructions[i], counter);
+                        printf("ERROR: Missing operand for instruction %s at address %04X\n", instructions[i], counter);
                         break;
                     }
 					l = search(*head, token);
@@ -179,6 +180,7 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
 					}else {
                         if (!isvalidNumber(token) && !isvalidHexnumber(token)){
                             fprintf(logfile, "ERROR: Invalid number %s at address %04X\n", token, counter);
+                            printf("ERROR: Invalid number %s at address %04X\n", token, counter);
                             break;
                         }
                         value = strtol(token, NULL, 16);
@@ -192,12 +194,14 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
 					token = strtok(NULL, " ");
                     if (token == NULL){
                         fprintf(logfile, "ERROR: Missing operand for instruction %s at address %04X\n", instructions[i], counter);
+                        printf("ERROR: Missing operand for instruction %s at address %04X\n", instructions[i], counter);
                         break;
                     }
 					l = search(*head, token);                
                     if (l == NULL){
                         if (!isvalidNumber(token) && !isvalidHexnumber(token)){
                             fprintf(logfile, "ERROR: Invalid label or offset %s at address %04X\n", token, counter);
+                            printf("ERROR: Invalid label or offset %s at address %04X\n", token, counter);
                             break;
                         }
                         value = strtol(token, NULL, 16);
@@ -211,6 +215,7 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
 					l = search(*head, token);                
                     if (!isvalidHexnumber(token) && !isvalidNumber(token) && l == NULL){
                         fprintf(logfile, "ERROR: Invalid number %s at address %04X\n", instructions[i], counter);
+                        printf("ERROR: Invalid number %s at address %04X\n", instructions[i], counter);
                         break;
                     }
 
@@ -234,6 +239,7 @@ void append_line(char *str, int counter, FILE *fp, FILE *logfile, FILE *ofile, l
         }
         if (!found) {
             fprintf(logfile, "ERROR: Invalid mnemonic %s at address %04X\n", token, counter);
+            printf("ERROR: Invalid mnemonic %s at address %04X\n", token, counter);
         }
     } else if (label_flag) {
         fprintf(fp, "         ");
@@ -251,25 +257,25 @@ void extract_label(char *str, int counter, FILE *fp,FILE *logfile,FILE *ofile, l
     UNUSED(ofile);
     strcpy(line, str);
     strcpy(line2, str);
-    printf("%s\n", line);
     if (has_char(line)) {
         token = strtok(line, ":");
 		l = search(*head, token);
 		if (l == NULL) {
             if (token[0] >= '0' && token[0] <= '9') {
                 fprintf(logfile, "ERROR: Invalid label %s at address %04X\n", token, counter);
+                printf("ERROR: Invalid label %s at address %04X\n", token, counter);
             }
        		insert(token, counter, head);
 		}
 		else{
 			fprintf(logfile, "ERROR: Duplicate labels found for %s.\n", token);
+			printf("ERROR: Duplicate labels found for %s.\n", token);
 		}
     }
     if (containsSET(line2)){
         token2 = strtok(NULL, "SET ");
         if (token2){
             address = strtol(token2, NULL, 0);
-            printf("%s -> %x\n", token2, address);
             l = search(*head, token);
             l->address = address;
         }
@@ -358,6 +364,10 @@ int main(int argc, char *argv[]) {
     label *L = ((void *)0);
 	char *log_file = malloc(sizeof(char) * 100);
     char *out_file = malloc(sizeof(char) * 100);
+    if (fp == NULL) {
+        printf("Error opening file");
+        return -1;
+    }
     if (argc < 2) {
         return 0;
     }
@@ -371,10 +381,6 @@ int main(int argc, char *argv[]) {
 	logfile = fopen(log_file, "w+");
     ofile = fopen(out_file, "wb");
 
-    if (fp == NULL) {
-        printf("Error opening file");
-        return -1;
-    }
     read_file(fp, lfile, logfile,ofile, extract_label, &L);
     fseek(fp, 0, SEEK_SET);
     read_file(fp, lfile, logfile,ofile, append_line, &L);
